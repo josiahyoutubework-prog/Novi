@@ -14,8 +14,8 @@ account and clicking deploy), which no one but you can do.
 
 ### Step 1 — Get the code on GitHub
 
-The app is its own repository, pushed to **`Rovi`**
-(`https://github.com/josiahyoutubework-prog/Rovi`). The app sits at the repo root, so
+The app is its own repository, pushed to **`Novi`**
+(`https://github.com/josiahyoutubework-prog/Novi`). The app sits at the repo root, so
 there's nothing to configure. (If you ever need to push again from
 `C:\OJ Studios\Projects\Novi\app`: `git add -A && git commit -m "…" && git push`.)
 
@@ -26,7 +26,7 @@ Dockerfile. It's the simplest path.
 
 1. Go to **render.com** and sign up (you can use "Sign in with GitHub").
 2. Click **New +** → **Web Service**.
-3. Connect your GitHub and pick the **`Rovi`** repository.
+3. Connect your GitHub and pick the **`Novi`** repository.
 4. Set these fields:
    - **Root Directory:** leave blank (the app is at the repo root)
    - **Runtime / Environment:** Docker (Render detects the `Dockerfile` automatically)
@@ -43,9 +43,9 @@ Render builds the image and, after a couple of minutes, gives you a public URL l
 
 ## Other hosts (if you'd rather)
 
-- **Railway** (railway.app) — New Project → Deploy from GitHub repo → pick `Rovi`.
+- **Railway** (railway.app) — New Project → Deploy from GitHub repo → pick `Novi`.
   Uses the same Dockerfile. Free trial credit.
-- **Fly.io** (fly.io) — `fly launch` from the `Rovi` checkout (needs the Fly CLI and a
+- **Fly.io** (fly.io) — `fly launch` from the `Novi` checkout (needs the Fly CLI and a
   card on file even for the free allowance).
 
 Any host that can build a Dockerfile will run Novi as-is.
