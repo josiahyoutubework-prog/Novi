@@ -1,0 +1,73 @@
+.mkt { background: var(--bg); color: var(--ink); scroll-behavior: smooth; }
+html:has(.mkt) { scroll-behavior: smooth; }
+.mkt-header {
+  position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+}
+.mkt-header-inner { max-width: 1180px; margin: 0 auto; padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.mkt-wrap { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
+.mkt-section { padding: 96px 0; scroll-margin-top: 76px; }
+
+/* Header nav */
+.mkt-brand { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; cursor: pointer; }
+.mkt-nav { display: flex; align-items: center; gap: 26px; }
+.mkt-nav-link { font-size: 15px; color: var(--ink-3); cursor: pointer; transition: color .12s; background: none; border: none; padding: 0; }
+.mkt-nav-link:hover { color: var(--accent); }
+.mkt-header-cta { display: flex; align-items: center; gap: 18px; }
+.mkt-burger { display: none; width: 40px; height: 40px; border: 1px solid var(--line-strong); border-radius: 10px; align-items: center; justify-content: center; flex-direction: column; gap: 4px; cursor: pointer; }
+.mkt-burger span { width: 16px; height: 1.5px; background: var(--ink); display: block; }
+
+/* Mobile menu drawer */
+.mkt-mobile-menu { display: none; }
+
+@media (max-width: 860px) {
+  .mkt-nav, .mkt-header-cta .mkt-desktop-only { display: none; }
+  .mkt-burger { display: flex; }
+  .mkt-mobile-menu {
+    display: flex; flex-direction: column; gap: 4px; padding: 8px 22px 20px;
+    border-bottom: 1px solid var(--line); background: var(--bg);
+  }
+  .mkt-mobile-menu .mkt-nav-link { padding: 14px 0; font-size: 17px; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; }
+}
+
+/* FAQ accordion */
+.mkt-faq-q { display: flex; justify-content: space-between; align-items: center; gap: 20px; cursor: pointer; width: 100%; text-align: left; }
+.mkt-faq-sign { font-size: 22px; color: var(--muted); transition: transform .2s; flex-shrink: 0; line-height: 1; }
+.mkt-faq-row.open .mkt-faq-sign { transform: rotate(45deg); color: var(--accent); }
+.mkt-faq-a { max-height: 0; overflow: hidden; transition: max-height .28s ease, margin-top .28s ease; }
+.mkt-faq-row.open .mkt-faq-a { max-height: 240px; margin-top: 12px; }
+.mkt-eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+
+.mkt-hero-h { font-size: 86px; font-weight: 600; letter-spacing: -0.035em; line-height: 0.98; margin: 18px 0 0; }
+.mkt-h2 { font-size: 48px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.08; margin: 0; }
+
+.mkt-panel { border: 1px solid var(--line-strong); border-radius: 20px; background: var(--bg); overflow: hidden; }
+.mkt-panel-grid { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .mkt-panel-grid { grid-template-columns: 1fr 1fr; } }
+
+.mkt-cols { display: grid; grid-template-columns: 1fr; gap: 40px; }
+@media (min-width: 700px) { .mkt-cols { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .mkt-cols.four { grid-template-columns: repeat(4, 1fr); } }
+
+.mkt-missions { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+@media (min-width: 640px) { .mkt-missions { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 940px) { .mkt-missions { grid-template-columns: repeat(3, 1fr); } }
+.mkt-mission-cell { background: var(--bg-alt); padding: 32px 28px; }
+
+.mkt-two { display: grid; grid-template-columns: 1fr; gap: 48px; }
+@media (min-width: 900px) { .mkt-two { grid-template-columns: 1fr 1fr; } }
+
+.mkt-pricing { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 760px) { .mkt-pricing { grid-template-columns: 1fr 1fr; } }
+.mkt-price-card { border: 1px solid var(--line-strong); border-radius: 18px; padding: 32px; }
+.mkt-price-card.dark { background: var(--ink); color: var(--ink-fill-text); border: none; }
+
+.mkt-faq-row { padding: 26px 0; border-top: 1px solid var(--line); }
+.mkt-cta { background: var(--ink); color: var(--ink-fill-text); border-radius: 24px; padding: 72px 48px; text-align: center; }
+
+@media (max-width: 720px) {
+  .mkt-hero-h { font-size: 52px; }
+  .mkt-h2 { font-size: 34px; }
+  .mkt-header-inner, .mkt-wrap { padding-left: 22px; padding-right: 22px; }
+  .mkt-section { padding: 64px 0; }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "novi-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Novi API — Express + node:sqlite",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "seed": "node -e \"import('./seed.js').then(m=>m.seed(true))\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

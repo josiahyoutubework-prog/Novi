@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+*.tsbuildinfo
+
+# SQLite database (regenerated + seeded on first boot)
+server/data.db
+server/data.db-shm
+server/data.db-wal

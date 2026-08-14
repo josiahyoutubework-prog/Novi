@@ -1,0 +1,14 @@
+# Render Blueprint for Novi (repo: Rovi). In Render: New → Blueprint → pick the
+# Rovi repo and it reads this file. Or create a Web Service manually — the app is
+# at the repo root, so you can leave Root Directory blank. See DEPLOY.md.
+services:
+  - type: web
+    name: novi
+    runtime: docker
+    repo: https://github.com/josiahyoutubework-prog/Rovi
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
