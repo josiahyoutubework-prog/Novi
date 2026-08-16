@@ -1,0 +1,20 @@
+# Novi — one-command deploy for a VPS (Hostinger KVM, or any Docker host).
+#   docker compose up -d --build
+# Serves the whole app (frontend + API) on port 80. The SQLite database lives
+# in a named volume, so your data survives restarts and redeploys.
+services:
+  novi:
+    build: .
+    container_name: novi
+    restart: unless-stopped
+    ports:
+      - "80:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - NOVI_DB=/data/novi.db
+    volumes:
+      - novi-data:/data
+
+volumes:
+  novi-data:
