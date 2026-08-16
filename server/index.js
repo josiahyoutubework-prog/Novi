@@ -12,6 +12,10 @@ import { buildPlan, clarifyingQuestions, workingSteps, chatReply, deriveTitle } 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Load server/.env (if present) so ANTHROPIC_API_KEY / NOVI_MODEL are available.
+try { process.loadEnvFile(path.join(__dirname, '.env')); } catch { /* no .env — fine */ }
+const { aiEnabled, aiBuildPlan, aiChatReply } = await import('./ai.js');
+
 seed(); // migrate + seed on first boot
 
 const app = express();
@@ -131,9 +135,16 @@ app.post('/api/missions/clarify', auth, (req, res) => {
   res.json({ title: deriveTitle(intention || ''), questions: clarifyingQuestions(intention || ''), steps: workingSteps(intention || '') });
 });
 
-app.post('/api/missions/plan', auth, (req, res) => {
+app.post('/api/missions/plan', auth, async (req, res) => {
   const { intention, answers } = req.body || {};
-  res.json({ plan: buildPlan(intention || '', answers || []) });
+  let plan;
+  try {
+    plan = await aiBuildPlan(intention || '', answers || []);
+  } catch (e) {
+    if (aiEnabled()) console.warn('[ai] plan fell back to the deterministic engine:', e.message);
+    plan = buildPlan(intention || '', answers || []);
+  }
+  res.json({ plan });
 });
 
 app.post('/api/missions', auth, (req, res) => {
@@ -255,13 +266,19 @@ app.get('/api/missions/:id/chat', auth, (req, res) => {
   const rows = all('SELECT * FROM chat_messages WHERE mission_id=? AND user_id=? ORDER BY created_at', req.params.id, req.user.id);
   res.json({ messages: rows.map((m) => ({ id: m.id, role: m.role, text: m.text, whatMoved: m.what_moved ? J(m.what_moved, []) : [], createdAt: m.created_at })) });
 });
-app.post('/api/missions/:id/chat', auth, (req, res) => {
+app.post('/api/missions/:id/chat', auth, async (req, res) => {
   const m = one('SELECT * FROM missions WHERE id=? AND user_id=?', req.params.id, req.user.id);
   if (!m) return res.status(404).json({ error: 'Mission not found' });
   const text = String(req.body?.text || '').trim();
   if (!text) return res.status(400).json({ error: 'Empty message' });
   run('INSERT INTO chat_messages (id,user_id,mission_id,role,text,created_at) VALUES (?,?,?,?,?,?)', randomUUID(), req.user.id, m.id, 'user', text, now());
-  const reply = chatReply(m, text);
+  let reply;
+  try {
+    reply = await aiChatReply(m, text);
+  } catch (e) {
+    if (aiEnabled()) console.warn('[ai] chat fell back to the deterministic engine:', e.message);
+    reply = chatReply(m, text);
+  }
   const rid = randomUUID();
   run('INSERT INTO chat_messages (id,user_id,mission_id,role,text,what_moved,created_at) VALUES (?,?,?,?,?,?,?)', rid, req.user.id, m.id, 'novi', reply.text, JSON.stringify(reply.what_moved || []), now());
   res.json({ reply: { id: rid, role: 'novi', text: reply.text, whatMoved: reply.what_moved || [] } });
@@ -279,7 +296,7 @@ app.patch('/api/settings', auth, (req, res) => {
   res.json({ user: publicUser(one('SELECT * FROM users WHERE id=?', req.user.id)) });
 });
 
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.get('/api/health', (req, res) => res.json({ ok: true, ai: aiEnabled() }));
 
 // ---- Serve the built frontend (production) ------------------------------
 // When web/dist exists, serve it and fall back to index.html for client-side

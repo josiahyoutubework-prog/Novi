@@ -3,6 +3,10 @@ dist/
 *.log
 *.tsbuildinfo
 
+# Secrets — never commit the API key
+.env
+server/.env
+
 # SQLite database (regenerated + seeded on first boot)
 server/data.db
 server/data.db-shm

@@ -97,11 +97,18 @@ function resolveTarget(answers) {
   return d;
 }
 
+// Resolve target date + label from the user's answers (shared with the AI path).
+export function targetFor(answers) {
+  const target = resolveTarget(answers);
+  return {
+    target_date: target.toISOString().slice(0, 10),
+    target_label: `Target · ${MONTHS[target.getMonth()]} ${target.getDate()}, ${target.getFullYear()}`,
+  };
+}
+
 export function buildPlan(intention, answers) {
   const tpl = phaseTemplate(intention);
-  const target = resolveTarget(answers);
-  const targetDate = target.toISOString().slice(0, 10);
-  const targetLabel = `Target · ${MONTHS[target.getMonth()]} ${target.getDate()}, ${target.getFullYear()}`;
+  const { target_date: targetDate, target_label: targetLabel } = targetFor(answers);
   const constraints = (answers || [])
     .filter((a) => a && !/^(yes|no|open|in 3|by next|end of|\$|something)/i.test(a))
     .join(' · ');

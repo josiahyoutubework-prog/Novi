@@ -85,6 +85,20 @@ docker compose restart        # restart the app
 docker compose down           # stop the app (data is kept)
 ```
 
+## Turn on real AI (optional)
+
+To have Novi actually think (real plans and chat via Anthropic), set your key before
+starting — either export it in the shell, or create a `.env` file next to
+`docker-compose.yml`:
+
+```bash
+echo "ANTHROPIC_API_KEY=sk-ant-your-key" > .env
+docker compose up -d --build
+```
+
+Compose passes it into the container automatically. Without it, Novi runs on its built-in
+engine. Never commit the `.env` file.
+
 ## Add a domain + HTTPS (optional)
 
 Right now the site is `http://YOUR_VPS_IP` (no padlock). To use a real domain with a

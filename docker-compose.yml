@@ -13,6 +13,10 @@ services:
       - NODE_ENV=production
       - PORT=4000
       - NOVI_DB=/data/novi.db
+      # Set ANTHROPIC_API_KEY in a .env file (or the shell) to turn on real AI.
+      # Without it, Novi runs on its built-in deterministic engine.
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - NOVI_MODEL=${NOVI_MODEL:-claude-opus-5}
     volumes:
       - novi-data:/data
 

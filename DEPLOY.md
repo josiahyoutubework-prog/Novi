@@ -52,6 +52,13 @@ Any host that can build a Dockerfile will run Novi as-is.
 
 ---
 
+## Turning on real AI
+
+By default Novi runs on its built-in engine (no key needed). To have it think for real,
+add an **environment variable** on your host named `ANTHROPIC_API_KEY` with your Anthropic
+key. On Render: the service's **Environment** tab → **Add Environment Variable**. The app
+picks it up on the next deploy; `GET /api/health` then reports `{"ai": true}`.
+
 ## Good to know
 
 - **Demo data resets on the free tier.** Free hosts don't keep a permanent disk, so

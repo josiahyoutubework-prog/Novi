@@ -16,9 +16,25 @@ Monorepo, matching the OJ Studios pattern (EdgeAI, AI Revenue Agent):
   CSS design system (light/dark tokens straight from the handoff).
 - **server/** — Express + `node:sqlite` (Node 22+). Auth (token sessions), missions,
   actions, intelligence, agents, memory, activity, chat, autonomy — all persisted.
-  A deterministic "Novi engine" (`novi.js`) stands in for an LLM: it turns an intention
-  into a structured plan and answers mission-scoped chat, so the product is fully
-  functional offline.
+  - **Real AI** (`ai.js`) — when an `ANTHROPIC_API_KEY` is set, Novi uses Anthropic's
+    `claude-opus-5` (structured outputs + adaptive thinking) to generate mission plans
+    and answer mission-scoped chat.
+  - **Deterministic fallback** (`novi.js`) — with no key configured (or if a model call
+    fails), Novi falls back to a built-in engine, so the product is always fully
+    functional offline. `GET /api/health` reports `{ "ai": true|false }`.
+
+## Turning on real AI (optional)
+
+Copy `server/.env.example` to `server/.env` and add your key:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+# NOVI_MODEL=claude-opus-5   # optional; this is the default
+```
+
+Get a key from https://console.anthropic.com/ (API Keys). Restart the server. That's it —
+plan generation and chat now think for real. Without a key, everything still works on the
+deterministic engine.
 
 ## Run
 
@@ -65,5 +81,5 @@ and drops you straight into the mission-creation flow.
 
 Social sign-in and outbound sending are stubbed (this build never actually emails anyone
 or moves money — matching Novi's own promise that it "never acts without permission").
-The AI is a deterministic engine, not a live model; swapping in Anthropic's API is a
-single module (`server/novi.js`).
+Novi's planning and chat use a real Anthropic model when a key is configured, and a
+deterministic engine otherwise (see "Turning on real AI" above).
