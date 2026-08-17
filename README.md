@@ -47,6 +47,31 @@ Open http://localhost:5173.
 
 Under the Claude Code harness this is the **`novi`** launch config (`npm run dev:all`).
 
+## Tests
+
+```bash
+npm test          # runs the API test suite (node --test)
+```
+
+18 API tests cover auth (hashed passwords, validation, dupes), missions, the plan →
+create → complete flow, action resolution, memory CRUD, chat, autonomy, and 404 handling —
+against an isolated temp database.
+
+## Reliability & security
+
+- **Passwords are hashed** with scrypt (per-user salt, constant-time compare) — never stored
+  in plain text.
+- **Every API route except auth/health requires a token**, and every query is scoped to the
+  authenticated user, so one account can't read another's data.
+- **All SQL is parameterized** (`node:sqlite` prepared statements) — no string interpolation.
+- **Request hardening:** 256 KB body limit, `X-Content-Type-Options` / `X-Frame-Options` /
+  `Referrer-Policy` headers, a JSON 404 for unknown API routes, and a global error handler
+  that returns JSON (never an HTML stack trace).
+- **The frontend has an error boundary** — a render error shows a calm recovery screen, not a
+  blank page — and surfaces unexpected failures as a toast instead of failing silently.
+- Known limitations (fine for a demo, worth adding for production): session tokens don't
+  expire, there's no login rate-limiting, and the demo password is intentionally public.
+
 ## Demo login
 
 ```

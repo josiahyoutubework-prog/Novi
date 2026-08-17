@@ -2,6 +2,7 @@
 // mission and everything around it, matching the design handoff copy exactly.
 import { randomUUID } from 'node:crypto';
 import { db, migrate } from './db.js';
+import { hashPassword } from './hash.js';
 
 const now = () => new Date().toISOString();
 const run = (sql, ...p) => db.prepare(sql).run(...p);
@@ -20,7 +21,7 @@ export function seed(force = false) {
   run(
     `INSERT INTO users (id,name,email,password,plan,autonomy_level,theme,calendar_connected,notifications,created_at)
      VALUES (?,?,?,?,?,?,?,?,?,?)`,
-    uid, 'Alex Mercer', 'alex@mercer.co', 'password123', 'Novi Pro', 'Co-pilot', 'system', 0, 'Important only', now()
+    uid, 'Alex Mercer', 'alex@mercer.co', hashPassword('password123'), 'Novi Pro', 'Co-pilot', 'system', 0, 'Important only', now()
   );
 
   // ---- Missions ---------------------------------------------------------

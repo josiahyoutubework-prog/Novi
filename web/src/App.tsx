@@ -58,6 +58,18 @@ export default function App() {
 
   useEffect(() => { boot(); }, [boot]);
 
+  // Safety net: surface an unexpected failed action instead of silently swallowing it.
+  useEffect(() => {
+    const onReject = (e: PromiseRejectionEvent) => {
+      const msg = e.reason instanceof Error ? e.reason.message : '';
+      if (msg && !/not authenticated/i.test(msg)) {
+        useStore.getState().toast('Something went wrong. Please try again.');
+      }
+    };
+    window.addEventListener('unhandledrejection', onReject);
+    return () => window.removeEventListener('unhandledrejection', onReject);
+  }, []);
+
   if (!booted) return <BootScreen />;
 
   return (

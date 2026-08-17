@@ -9,6 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from './db.js';
 import { seed } from './seed.js';
 import { buildPlan, clarifyingQuestions, workingSteps, chatReply, deriveTitle } from './novi.js';
+import { hashPassword, verifyPassword } from './hash.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -20,7 +21,15 @@ seed(); // migrate + seed on first boot
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '256kb' }));
+
+// Conservative security headers (no dependency needed).
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
 
 const PORT = process.env.PORT || 4000;
 const all = (sql, ...p) => db.prepare(sql).all(...p);
@@ -59,7 +68,7 @@ const publicUser = (u) => ({
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body || {};
   const u = one('SELECT * FROM users WHERE lower(email)=lower(?)', String(email || '').trim());
-  if (!u || u.password !== password) return res.status(401).json({ error: 'That email and password don’t match.' });
+  if (!u || !verifyPassword(String(password || ''), u.password)) return res.status(401).json({ error: 'That email and password don’t match.' });
   res.json({ token: issueToken(u.id), user: publicUser(u) });
 });
 
@@ -67,13 +76,13 @@ app.post('/api/auth/signup', (req, res) => {
   const { name, email, password } = req.body || {};
   const nm = String(name || '').trim() || 'You';
   const em = String(email || '').trim();
-  if (!em) return res.status(400).json({ error: 'Enter an email to continue.' });
+  if (!/^\S+@\S+\.\S+$/.test(em)) return res.status(400).json({ error: 'Enter a valid email to continue.' });
   if (one('SELECT id FROM users WHERE lower(email)=lower(?)', em)) return res.status(409).json({ error: 'An account already uses that email.' });
   const id = 'user_' + randomUUID().slice(0, 8);
   run(
     `INSERT INTO users (id,name,email,password,plan,autonomy_level,theme,calendar_connected,notifications,created_at)
      VALUES (?,?,?,?,?,?,?,?,?,?)`,
-    id, nm, em, String(password || 'welcome'), 'Novi Free', 'Co-pilot', 'system', 0, 'Important only', now()
+    id, nm.slice(0, 80), em, hashPassword(String(password || 'welcome')), 'Novi Free', 'Co-pilot', 'system', 0, 'Important only', now()
   );
   const u = one('SELECT * FROM users WHERE id=?', id);
   res.json({ token: issueToken(id), user: publicUser(u) });
@@ -322,6 +331,9 @@ app.patch('/api/settings', auth, (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ai: aiEnabled() }));
 
+// Unknown API routes return JSON 404 (not the SPA fallback below).
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+
 // ---- Serve the built frontend (production) ------------------------------
 // When web/dist exists, serve it and fall back to index.html for client-side
 // routes, so the whole product is one deployable service on a single origin.
@@ -335,4 +347,17 @@ if (fs.existsSync(webDist)) {
   console.log('[api] serving built frontend from web/dist');
 }
 
-app.listen(PORT, () => console.log(`[api] Novi listening on http://localhost:${PORT}`));
+// Global error handler — always return JSON, never an HTML stack trace.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[api] error:', err.message);
+  if (res.headersSent) return;
+  const status = err.type === 'entity.too.large' ? 413 : err.status || 500;
+  res.status(status).json({ error: status === 500 ? 'Something went wrong' : err.message });
+});
+
+// Don't let a stray rejection take the process down.
+process.on('unhandledRejection', (reason) => console.error('[api] unhandledRejection:', reason));
+
+export const server = app.listen(PORT, () => console.log(`[api] Novi listening on http://localhost:${PORT}`));
+export { app };
