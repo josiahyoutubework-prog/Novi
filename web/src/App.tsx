@@ -24,11 +24,14 @@ import AgentDetail from './screens/AgentDetail';
 import Autonomy from './screens/Autonomy';
 import Memory from './screens/Memory';
 import Settings from './screens/Settings';
+import Fitness from './screens/Fitness';
 import Permission from './screens/Permission';
 import MissionComplete from './screens/MissionComplete';
 
 import ConfirmSheet from './components/ConfirmSheet';
 import Toasts from './components/Toasts';
+import AlarmChallenge from './components/AlarmChallenge';
+import AlarmScheduler from './components/AlarmScheduler';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const user = useStore((s) => s.user);
@@ -104,12 +107,15 @@ export default function App() {
           <Route path="/agents/:id" element={<AgentDetail />} />
           <Route path="/autonomy" element={<Autonomy />} />
           <Route path="/memory" element={<Memory />} />
+          <Route path="/fitness" element={<Fitness />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 
         <Route path="*" element={<Navigate to={user ? '/' : '/welcome'} replace />} />
       </Routes>
 
+      {user && <AlarmScheduler />}
+      <AlarmChallenge />
       <ConfirmSheet />
       <Toasts />
     </>

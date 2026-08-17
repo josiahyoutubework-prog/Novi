@@ -329,6 +329,71 @@ app.patch('/api/settings', auth, (req, res) => {
   res.json({ user: publicUser(one('SELECT * FROM users WHERE id=?', req.user.id)) });
 });
 
+// ---- Fitness (pushup alarm) ---------------------------------------------
+// Local calendar date (YYYY-MM-DD) so day boundaries match what the user sees.
+const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayStr = () => localDate();
+
+function fitnessSettings(userId) {
+  let s = one('SELECT * FROM fitness_settings WHERE user_id=?', userId);
+  if (!s) {
+    run(`INSERT INTO fitness_settings (user_id,updated_at) VALUES (?,?)`, userId, now());
+    s = one('SELECT * FROM fitness_settings WHERE user_id=?', userId);
+  }
+  return {
+    enabled: !!s.enabled,
+    alarmTime: s.alarm_time,
+    pushupGoal: s.pushup_goal,
+    countMode: s.count_mode,
+    soundOn: !!s.sound_on,
+  };
+}
+
+// Consecutive days (ending today or yesterday) with at least one completion.
+function fitnessStreak(userId) {
+  const dates = new Set(all('SELECT DISTINCT date FROM fitness_log WHERE user_id=?', userId).map((r) => r.date));
+  let streak = 0;
+  const d = new Date();
+  // Allow the streak to count from yesterday if today isn't done yet.
+  if (!dates.has(localDate(d))) d.setDate(d.getDate() - 1);
+  for (;;) {
+    if (dates.has(localDate(d))) { streak += 1; d.setDate(d.getDate() - 1); } else break;
+  }
+  return streak;
+}
+
+function fitnessPayload(userId) {
+  const log = all('SELECT id,date,reps,kind FROM fitness_log WHERE user_id=? ORDER BY date DESC, created_at DESC LIMIT 30', userId);
+  return {
+    settings: fitnessSettings(userId),
+    log,
+    streak: fitnessStreak(userId),
+    completedToday: log.some((l) => l.date === todayStr()),
+  };
+}
+
+app.get('/api/fitness', auth, (req, res) => res.json(fitnessPayload(req.user.id)));
+
+app.patch('/api/fitness', auth, (req, res) => {
+  fitnessSettings(req.user.id); // ensure row exists
+  const { enabled, alarmTime, pushupGoal, countMode, soundOn } = req.body || {};
+  if (enabled != null) run('UPDATE fitness_settings SET enabled=? WHERE user_id=?', enabled ? 1 : 0, req.user.id);
+  if (typeof alarmTime === 'string' && /^\d{2}:\d{2}$/.test(alarmTime)) run('UPDATE fitness_settings SET alarm_time=? WHERE user_id=?', alarmTime, req.user.id);
+  if (pushupGoal != null) run('UPDATE fitness_settings SET pushup_goal=? WHERE user_id=?', Math.max(1, Math.min(500, Math.round(pushupGoal))), req.user.id);
+  if (countMode === 'tap' || countMode === 'motion') run('UPDATE fitness_settings SET count_mode=? WHERE user_id=?', countMode, req.user.id);
+  if (soundOn != null) run('UPDATE fitness_settings SET sound_on=? WHERE user_id=?', soundOn ? 1 : 0, req.user.id);
+  run('UPDATE fitness_settings SET updated_at=? WHERE user_id=?', now(), req.user.id);
+  res.json(fitnessPayload(req.user.id));
+});
+
+app.post('/api/fitness/complete', auth, (req, res) => {
+  const reps = Math.max(0, Math.min(1000, Math.round(Number(req.body?.reps) || 0)));
+  const kind = req.body?.kind === 'now' ? 'now' : 'alarm';
+  run(`INSERT INTO fitness_log (id,user_id,date,reps,kind,created_at) VALUES (?,?,?,?,?,?)`,
+    randomUUID(), req.user.id, todayStr(), reps, kind, now());
+  res.json(fitnessPayload(req.user.id));
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true, ai: aiEnabled() }));
 
 // Unknown API routes return JSON 404 (not the SPA fallback below).

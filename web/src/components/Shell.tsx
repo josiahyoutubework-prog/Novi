@@ -8,6 +8,7 @@ const NAV = [
   { label: 'Action Center', path: '/actions', badgeKey: 'actions' },
   { label: 'Intelligence', path: '/intelligence' },
   { label: 'Agents', path: '/agents' },
+  { label: 'Fitness', path: '/fitness' },
 ];
 
 const SETTINGS_NAV = [
@@ -36,7 +37,7 @@ export default function Shell() {
 
   const tabActive = (path: string) => {
     if (path === '/') return loc.pathname === '/';
-    if (path === '/novi') return ['/novi', '/intelligence', '/agents', '/autonomy', '/memory', '/settings'].some((p) => loc.pathname.startsWith(p));
+    if (path === '/novi') return ['/novi', '/intelligence', '/agents', '/autonomy', '/memory', '/settings', '/fitness'].some((p) => loc.pathname.startsWith(p));
     return loc.pathname === path || loc.pathname.startsWith(path + '/');
   };
 

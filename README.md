@@ -99,6 +99,13 @@ and drops you straight into the mission-creation flow.
 - **Trust layer** — Intelligence feed, Agents + agent detail (activate onto a mission),
   Autonomy (change level, toggle categories), Memory (edit / delete / clear), Settings
   with the calendar error + reconnect, Permission screen.
+- **Fitness — pushup alarm** — a morning alarm that **won't turn off until you do your
+  pushups** (goal is configurable). While Novi is open it rings at the set time; the
+  full-screen challenge is dismissed only by completing the reps — counted by tapping the
+  screen (phone on the floor, tap with your nose/chin at the bottom of each rep) or by phone
+  motion. Tracks a daily streak and a completion log. "Do the challenge now" tries it any
+  time. (A web app can't wake a *closed* tab — add Novi to your home screen, or a future
+  native app, for a true background alarm.)
 - **Auth** — sign up, log in, magic-link recovery. **Dark theme** throughout (system default,
   toggle in Settings). Responsive: mobile tab bar below 1024px, desktop sidebar above.
 

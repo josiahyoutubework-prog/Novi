@@ -54,6 +54,16 @@ export interface Forgotten { id: string; missionId: string | null; grouping: str
 export interface WhatMoved { label: string; value: string; tone: 'success' | 'warning' | 'accent' | 'neutral'; }
 export interface ChatMessage { id: string; role: 'user' | 'novi'; text: string; whatMoved: WhatMoved[]; why?: string[]; }
 
+export interface FitnessSettings {
+  enabled: boolean;
+  alarmTime: string;      // HH:MM
+  pushupGoal: number;
+  countMode: 'tap' | 'motion';
+  soundOn: boolean;
+}
+export interface FitnessLog { id: string; date: string; reps: number; kind: string; }
+export interface Fitness { settings: FitnessSettings; log: FitnessLog[]; streak: number; completedToday: boolean; }
+
 export interface Question { prompt: string; chips: string[]; }
 export interface WorkingStep { text: string; sub: string; state: 'done' | 'active' | 'pending'; }
 export interface Plan {

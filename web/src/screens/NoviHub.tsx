@@ -10,9 +10,11 @@ export default function NoviHub() {
   const user = useStore((s) => s.user);
   const top = intelligence[0];
 
+  const fitness = useStore((s) => s.fitness);
   const sections = [
     { label: 'Intelligence', value: `${intelligence.length} things Novi noticed`, path: '/intelligence' },
     { label: 'Agents', value: `${agents.filter((a) => a.status === 'active').length} active`, path: '/agents' },
+    { label: 'Fitness', value: fitness ? (fitness.streak > 0 ? `${fitness.streak}-day streak` : 'Set your alarm') : '', path: '/fitness' },
     { label: 'Autonomy', value: user?.autonomyLevel ?? '', path: '/autonomy' },
     { label: 'Memory', value: `${memory.length} items`, path: '/memory' },
     { label: 'Settings', value: user?.calendarConnected ? '' : '1 needs attention', path: '/settings', warn: !user?.calendarConnected },

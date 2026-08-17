@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api, getToken, setToken } from './lib/api';
 import type {
-  User, Mission, Action, Intel, Agent, MemoryItem, AutonomyLevel,
+  User, Mission, Action, Intel, Agent, MemoryItem, AutonomyLevel, Fitness, FitnessSettings,
 } from './types';
 
 // A pending consequential action awaiting confirmation via the bottom sheet.
@@ -27,6 +27,9 @@ interface State {
   intelligence: Intel[];
   agents: Agent[];
   memory: MemoryItem[];
+  fitness: Fitness | null;
+  alarmActive: boolean;
+  alarmKind: 'alarm' | 'now';
   confirmation: Confirmation | null;
   toasts: Toast[];
 
@@ -41,6 +44,12 @@ interface State {
 
   setAutonomy: (level: AutonomyLevel) => Promise<void>;
   updateSettings: (patch: Partial<Pick<User, 'theme' | 'notifications' | 'calendarConnected' | 'allowedCategories' | 'mustAskCategories'>>) => Promise<void>;
+
+  loadFitness: () => Promise<void>;
+  saveFitness: (patch: Partial<FitnessSettings>) => Promise<void>;
+  completeChallenge: (reps: number, kind: 'alarm' | 'now') => Promise<void>;
+  triggerAlarm: (kind?: 'alarm' | 'now') => void;
+  dismissAlarm: () => void;
 
   requireConfirm: (c: Confirmation) => void;
   clearConfirm: () => void;
@@ -60,6 +69,9 @@ export const useStore = create<State>((set, get) => ({
   intelligence: [],
   agents: [],
   memory: [],
+  fitness: null,
+  alarmActive: false,
+  alarmKind: 'alarm',
   confirmation: null,
   toasts: [],
 
@@ -108,7 +120,26 @@ export const useStore = create<State>((set, get) => ({
       api.get<{ memory: MemoryItem[] }>('/memory'),
     ]);
     set({ missions: m.missions, actions: a.actions, intelligence: i.intelligence, agents: ag.agents, memory: mem.memory });
+    get().loadFitness().catch(() => {});
   },
+
+  loadFitness: async () => {
+    const f = await api.get<Fitness>('/fitness');
+    set({ fitness: f });
+  },
+
+  saveFitness: async (patch) => {
+    const f = await api.patch<Fitness>('/fitness', patch);
+    set({ fitness: f });
+  },
+
+  completeChallenge: async (reps, kind) => {
+    const f = await api.post<Fitness>('/fitness/complete', { reps, kind });
+    set({ fitness: f });
+  },
+
+  triggerAlarm: (kind = 'alarm') => set({ alarmActive: true, alarmKind: kind }),
+  dismissAlarm: () => set({ alarmActive: false }),
 
   resolveAction: async (id, choice) => {
     await api.post(`/actions/${id}/resolve`, { choice });

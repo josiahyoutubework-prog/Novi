@@ -142,5 +142,25 @@ export function migrate() {
     sort INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
   );
+
+  -- Fitness: the pushup-gated morning alarm and its completion log.
+  CREATE TABLE IF NOT EXISTS fitness_settings (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    enabled INTEGER NOT NULL DEFAULT 0,
+    alarm_time TEXT NOT NULL DEFAULT '07:00',   -- HH:MM, 24h
+    pushup_goal INTEGER NOT NULL DEFAULT 20,
+    count_mode TEXT NOT NULL DEFAULT 'tap',      -- tap | motion
+    sound_on INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS fitness_log (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,                          -- YYYY-MM-DD
+    reps INTEGER NOT NULL DEFAULT 0,
+    kind TEXT NOT NULL DEFAULT 'alarm',          -- alarm | now
+    created_at TEXT NOT NULL
+  );
   `);
 }

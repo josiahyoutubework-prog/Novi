@@ -154,6 +154,32 @@ test('autonomy level update persists', async () => {
   assert.equal(r.body.user.autonomyLevel, 'Autopilot');
 });
 
+test('fitness settings load with a default alarm and a seeded streak', async () => {
+  const r = await api('GET', '/api/fitness', { token: await login() });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.settings.pushupGoal, 20);
+  assert.equal(r.body.settings.alarmTime, '07:00');
+  assert.ok(r.body.streak >= 2); // two seeded prior days
+});
+
+test('fitness goal update clamps and persists', async () => {
+  const token = await login();
+  const r = await api('PATCH', '/api/fitness', { token, body: { pushupGoal: 35, enabled: true, alarmTime: '06:30' } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.settings.pushupGoal, 35);
+  assert.equal(r.body.settings.enabled, true);
+  assert.equal(r.body.settings.alarmTime, '06:30');
+  const clamp = await api('PATCH', '/api/fitness', { token, body: { pushupGoal: 9999 } });
+  assert.equal(clamp.body.settings.pushupGoal, 500);
+});
+
+test('completing a challenge logs it and marks today done', async () => {
+  const r = await api('POST', '/api/fitness/complete', { token: await login(), body: { reps: 20, kind: 'now' } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.completedToday, true);
+  assert.ok(r.body.log[0].reps === 20);
+});
+
 test('unknown API routes return JSON 404', async () => {
   const r = await api('GET', '/api/nope', { token: await login() });
   assert.equal(r.status, 404);

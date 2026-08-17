@@ -230,5 +230,21 @@ export function seed(force = false) {
     now()
   );
 
+  // ---- Fitness: pushup alarm settings + a short streak -----------------
+  run(
+    `INSERT INTO fitness_settings (user_id,enabled,alarm_time,pushup_goal,count_mode,sound_on,updated_at)
+     VALUES (?,?,?,?,?,?,?)`,
+    uid, 0, '07:00', 20, 'tap', 1, now()
+  );
+  const dayStr = (offset) => {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  [1, 2].forEach((offset) => run(
+    `INSERT INTO fitness_log (id,user_id,date,reps,kind,created_at) VALUES (?,?,?,?,?,?)`,
+    randomUUID(), uid, dayStr(offset), 20, 'alarm', now()
+  ));
+
   console.log('[seed] Novi demo data seeded for Alex Mercer (alex@mercer.co / password123).');
 }
