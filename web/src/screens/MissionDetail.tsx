@@ -3,6 +3,7 @@ import { useMissionDetail } from '../lib/hooks';
 import { StatusChip, PhaseTimeline, NoticedBlock, Check } from '../components/ui';
 import { intelInk, phaseColor, phaseInk, phaseLabel } from '../lib/status';
 import { useStore } from '../store';
+import { api } from '../lib/api';
 import './screens.css';
 
 export default function MissionDetail() {
@@ -10,9 +11,22 @@ export default function MissionDetail() {
   const nav = useNavigate();
   const { data } = useMissionDetail(id);
   const resolveAction = useStore((s) => s.resolveAction);
+  const refreshCore = useStore((s) => s.refreshCore);
+  const requireConfirm = useStore((s) => s.requireConfirm);
 
   if (!data) return <div className="screen"><div className="spin" /></div>;
   const { mission: m, intelligence, agents, actions } = data;
+
+  const markComplete = () => requireConfirm({
+    eyebrow: 'MARK COMPLETE',
+    question: `Mark "${m.title}" as complete?`,
+    confirmLabel: 'Complete it',
+    onConfirm: async () => {
+      const { summary } = await api.post<{ summary: unknown }>(`/missions/${m.id}/complete`);
+      await refreshCore();
+      nav(`/missions/${m.id}/complete`, { state: { summary } });
+    },
+  });
   const notice = intelligence.find((i) => i.kind === 'risk') ?? intelligence[0];
   const dep = intelligence.find((i) => i.kind === 'dependency');
   const activeAgents = agents.filter((a) => a.status === 'active');
@@ -75,6 +89,13 @@ export default function MissionDetail() {
           </div>
 
           <button className="btn btn-secondary" style={{ marginTop: 24 }} onClick={() => nav(`/missions/${m.id}/forgetting`)}>What am I forgetting?</button>
+
+          {m.status !== 'complete' && (
+            <div className="link" style={{ marginTop: 18, fontSize: 15, textAlign: 'center' }} onClick={markComplete}>Mark this mission complete</div>
+          )}
+          {m.status === 'complete' && (
+            <button className="btn btn-primary" style={{ marginTop: 18 }} onClick={() => nav(`/missions/${m.id}/complete`)}>See the result</button>
+          )}
         </div>
 
         <div className="rail" style={{ marginTop: 4 }}>

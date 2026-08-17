@@ -110,8 +110,9 @@ const CHAT_SCHEMA = {
         additionalProperties: false,
       },
     },
+    why: { type: 'array', items: { type: 'string' } },
   },
-  required: ['text', 'whatMoved'],
+  required: ['text', 'whatMoved', 'why'],
   additionalProperties: false,
 };
 
@@ -139,12 +140,14 @@ export async function aiChatReply(mission, question) {
       `${VOICE} You are answering a question scoped to one of the user's missions. ` +
       'Give only a clear conclusion in 1–3 sentences — never reveal step-by-step reasoning. ' +
       'If your answer implies a change to the plan, include 1–3 "whatMoved" rows summarising the deltas ' +
-      '(label, short value, and a tone: success, warning, accent, or neutral). Otherwise return an empty whatMoved.',
+      '(label, short value, and a tone: success, warning, accent, or neutral). Otherwise return an empty whatMoved. ' +
+      'Also return "why": 2–4 short factual bullets — the evidence behind your answer (dates, statuses, dependencies). ' +
+      'These are facts, never step-by-step reasoning.',
     messages: [
       { role: 'user', content: `${context}\nQuestion: ${question}` },
     ],
   });
 
   const raw = parseJson(response);
-  return { text: raw.text, what_moved: raw.whatMoved || [] };
+  return { text: raw.text, what_moved: raw.whatMoved || [], why: raw.why || [] };
 }

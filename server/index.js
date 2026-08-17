@@ -174,6 +174,30 @@ app.patch('/api/missions/:id', auth, (req, res) => {
   res.json({ mission: missionOut(one('SELECT * FROM missions WHERE id=?', m.id)) });
 });
 
+// Mark a mission complete: every phase done, progress 100, logged, and a
+// computed results summary returned for the completion screen.
+app.post('/api/missions/:id/complete', auth, (req, res) => {
+  const m = one('SELECT * FROM missions WHERE id=? AND user_id=?', req.params.id, req.user.id);
+  if (!m) return res.status(404).json({ error: 'Mission not found' });
+  const phases = J(m.phases, []).map((p) => ({ ...p, status: 'complete' }));
+  run('UPDATE missions SET status=?, progress=?, phases=?, status_note=?, what_matters=? WHERE id=?',
+    'complete', 100, JSON.stringify(phases), 'Complete', 'This mission is done. Novi kept a record of everything it handled.', m.id);
+  run(`INSERT INTO activity (id,user_id,mission_id,actor,date_label,text,is_today,sort,created_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+    randomUUID(), req.user.id, m.id, 'NOVI', 'TODAY', `Marked "${m.title}" complete`, 1, -2, now());
+  // Compute a results summary from what's on the mission.
+  const handled = one('SELECT COUNT(*) c FROM activity WHERE mission_id=? AND user_id=? AND actor IN (?,?)', m.id, req.user.id, 'NOVI', 'YOU')?.c ?? 0;
+  const resolved = one('SELECT COUNT(*) c FROM actions WHERE mission_id=? AND user_id=? AND status=?', m.id, req.user.id, 'resolved')?.c ?? 0;
+  res.json({
+    mission: missionOut(one('SELECT * FROM missions WHERE id=?', m.id)),
+    summary: {
+      finishedLabel: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      phases: phases.length,
+      actionsHandled: resolved,
+      noviActions: handled,
+    },
+  });
+});
+
 // ---- Actions ------------------------------------------------------------
 app.get('/api/actions', auth, (req, res) => {
   const rows = all('SELECT * FROM actions WHERE user_id=? AND status=? ORDER BY sort', req.user.id, 'open');
@@ -281,7 +305,7 @@ app.post('/api/missions/:id/chat', auth, async (req, res) => {
   }
   const rid = randomUUID();
   run('INSERT INTO chat_messages (id,user_id,mission_id,role,text,what_moved,created_at) VALUES (?,?,?,?,?,?,?)', rid, req.user.id, m.id, 'novi', reply.text, JSON.stringify(reply.what_moved || []), now());
-  res.json({ reply: { id: rid, role: 'novi', text: reply.text, whatMoved: reply.what_moved || [] } });
+  res.json({ reply: { id: rid, role: 'novi', text: reply.text, whatMoved: reply.what_moved || [], why: reply.why || [] } });
 });
 
 // ---- Settings / Autonomy -----------------------------------------------

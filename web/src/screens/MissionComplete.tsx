@@ -1,17 +1,27 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 
+interface Summary { finishedLabel: string; phases: number; actionsHandled: number; noviActions: number; }
+
 // The dark "mission complete" moment. Uses the Vancouver record when that
-// mission is the target, otherwise a generic completion summary.
+// mission is the target, otherwise a summary computed at completion time.
 export default function MissionComplete() {
   const { id } = useParams();
   const nav = useNavigate();
+  const loc = useLocation();
   const missions = useStore((s) => s.missions);
   const mission = missions.find((m) => m.id === id);
+  const summary = (loc.state as { summary?: Summary } | null)?.summary;
 
   const isVancouver = mission?.title.includes('Vancouver');
-  const headline = isVancouver ? 'You live in Vancouver.' : `You finished "${mission?.title ?? 'your mission'}".`;
-  const rows = isVancouver
+  const headline = isVancouver ? 'You live in Vancouver.' : mission ? `You finished it.` : 'Mission complete.';
+  const sub = isVancouver
+    ? 'Ten months, four phases, one date that never moved.'
+    : mission
+      ? `${mission.phases.length} phase${mission.phases.length === 1 ? '' : 's'}, done. Novi kept the record.`
+      : '';
+
+  const rows: [string, string][] = isVancouver
     ? [
         ['Finished', 'June 11, four days early'],
         ['Job secured', 'Hootsuite, March 18'],
@@ -19,9 +29,10 @@ export default function MissionComplete() {
         ['Novi handled', '163 actions'],
       ]
     : [
-        ['Finished', 'On time'],
-        ['Phases', `${mission?.phases.length ?? 0} completed`],
-        ['Novi handled', 'Every step it could'],
+        ['Finished', summary?.finishedLabel ?? 'Today'],
+        ['Phases completed', String(summary?.phases ?? mission?.phases.length ?? 0)],
+        ['Actions you approved', String(summary?.actionsHandled ?? 0)],
+        ['Steps Novi handled', String(summary?.noviActions ?? 0)],
       ];
 
   return (
@@ -29,12 +40,12 @@ export default function MissionComplete() {
       <div style={{ width: '100%', maxWidth: 402, boxSizing: 'border-box', padding: 'max(64px, env(safe-area-inset-top)) 28px 40px', display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
         <div className="eyebrow ok" style={{ color: 'var(--success)' }}>MISSION COMPLETE</div>
         <div style={{ marginTop: 22, fontSize: 36, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.08 }}>{headline}</div>
-        <div style={{ marginTop: 14, fontSize: 17, lineHeight: 1.55, color: 'var(--ink-3)' }}>Ten months, four phases, one date that never moved.</div>
+        {sub && <div style={{ marginTop: 14, fontSize: 17, lineHeight: 1.55, color: 'var(--ink-3)' }}>{sub}</div>}
 
         <div style={{ marginTop: 38 }}>
           {rows.map(([k, v], i) => (
-            <div key={k} style={{ padding: '16px 0', borderTop: '1px solid var(--line)', borderBottom: i === rows.length - 1 ? '1px solid var(--line)' : undefined, display: 'flex', justifyContent: 'space-between', fontSize: 16 }}>
-              <span style={{ color: 'var(--ink-3)' }}>{k}</span><span>{v}</span>
+            <div key={k} style={{ padding: '16px 0', borderTop: '1px solid var(--line)', borderBottom: i === rows.length - 1 ? '1px solid var(--line)' : undefined, display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 16 }}>
+              <span style={{ color: 'var(--ink-3)' }}>{k}</span><span style={{ textAlign: 'right' }}>{v}</span>
             </div>
           ))}
         </div>

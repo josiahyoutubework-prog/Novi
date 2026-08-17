@@ -142,6 +142,8 @@ export function workingSteps(intention) {
 export function chatReply(mission, question) {
   const q = (question || '').toLowerCase();
   const behind = mission.status === 'behind' || mission.status === 'at_risk';
+  const phases = (() => { try { return JSON.parse(mission.phases || '[]'); } catch { return []; } })();
+  const doneCount = phases.filter((p) => p.status === 'complete').length;
   if (/still|on time|make it|june|date|when/.test(q)) {
     return {
       text: behind
@@ -151,22 +153,38 @@ export function chatReply(mission, question) {
         { label: 'Target date', value: 'Unchanged', tone: 'success' },
         { label: 'Confidence', value: behind ? 'Holding' : 'On track', tone: behind ? 'warning' : 'success' },
       ],
+      why: [
+        `${doneCount} of ${phases.length || 5} phases are complete.`,
+        behind ? `Current status is "${mission.status.replace('_', ' ')}" — ${mission.status_note || 'one phase is behind'}.` : 'No phase is currently flagged at risk.',
+        'The remaining phases have slack against the target date.',
+      ],
     };
   }
   if (/behind|risk|worried|problem|late/.test(q)) {
     return {
       text: `The one thing to watch is ${mission.status_note || 'the current phase'}. If you close that this month, the rest of the plan is comfortable.`,
       what_moved: [{ label: 'Main risk', value: mission.status_note || 'Current phase', tone: 'warning' }],
+      why: [
+        `The mission status is "${mission.status.replace('_', ' ')}".`,
+        `The blocking item is: ${mission.status_note || 'the phase in progress'}.`,
+        'Everything downstream depends on it clearing first.',
+      ],
     };
   }
   if (/next|do|focus|today|now/.test(q)) {
     return {
       text: `Focus on the actions in your Action Center — they're the ones that unblock the rest. I'm handling the monitoring and drafting in the background.`,
       what_moved: [{ label: 'Your part', value: 'Open actions', tone: 'accent' }],
+      why: [
+        'The open actions each gate a later phase.',
+        'Monitoring and drafting are already running in the background.',
+        'Clearing the actions is the fastest way to move the mission.',
+      ],
     };
   }
   return {
     text: `I've noted that against ${mission.title}. When it changes the plan, I'll show you exactly what moved and why — you decide from there.`,
     what_moved: [],
+    why: ['Nothing about the plan has changed yet.', 'I only surface a change when it affects a date, a phase, or a risk.'],
   };
 }

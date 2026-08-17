@@ -17,6 +17,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [whyOpen, setWhyOpen] = useState<Record<string, boolean>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,8 +66,25 @@ export default function Chat() {
             )}
             <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
               <button className="btn btn-primary sm" onClick={() => nav(`/missions/${id}`)}>View revised plan</button>
-              <button className="btn btn-secondary sm" onClick={() => useStore.getState().toast('Novi bases this on your dates, saved facts and the current market — never on hidden reasoning.')}>Why?</button>
+              {m.why && m.why.length > 0 && (
+                <button className="btn btn-secondary sm" onClick={() => setWhyOpen((w) => ({ ...w, [m.id]: !w[m.id] }))}>
+                  {whyOpen[m.id] ? 'Hide why' : 'Why?'}
+                </button>
+              )}
             </div>
+            {whyOpen[m.id] && m.why && (
+              <div className="rise" style={{ marginTop: 12, padding: '14px 16px', border: '1px solid var(--line-strong)', borderRadius: 14, background: 'var(--hover)' }}>
+                <div className="mono" style={{ fontSize: 10, letterSpacing: '0.14em' }}>WHY</div>
+                <div style={{ marginTop: 9, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {m.why.map((w, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: 'var(--ink-2)', lineHeight: 1.45 }}>
+                      <span style={{ color: 'var(--muted-2)' }}>·</span>{w}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)' }}>The evidence — never how Novi thinks.</div>
+              </div>
+            )}
           </div>
         ))}
         {busy && <div className="fadein" style={{ display: 'flex', gap: 8, color: 'var(--muted)', fontSize: 15 }}><span className="spin" style={{ width: 14, height: 14 }} /> Novi is thinking…</div>}

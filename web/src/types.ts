@@ -52,7 +52,7 @@ export interface ActivityItem {
 export interface Forgotten { id: string; missionId: string | null; grouping: string; title: string; reason: string; added: boolean; }
 
 export interface WhatMoved { label: string; value: string; tone: 'success' | 'warning' | 'accent' | 'neutral'; }
-export interface ChatMessage { id: string; role: 'user' | 'novi'; text: string; whatMoved: WhatMoved[]; }
+export interface ChatMessage { id: string; role: 'user' | 'novi'; text: string; whatMoved: WhatMoved[]; why?: string[]; }
 
 export interface Question { prompt: string; chips: string[]; }
 export interface WorkingStep { text: string; sub: string; state: 'done' | 'active' | 'pending'; }

@@ -80,7 +80,7 @@ export default function Onboarding() {
         />
       )}
       {step === 'working' && <Working steps={steps} />}
-      {step === 'plan' && plan && <PlanReveal plan={plan} onStart={start} busy={busy} />}
+      {step === 'plan' && plan && <PlanReveal plan={plan} onStart={start} onChange={setPlan} busy={busy} />}
     </AuthFrame>
   );
 }
@@ -227,9 +227,10 @@ function Working({ steps }: { steps: WorkingStep[] }) {
   );
 }
 
-// ---- 03 · Novi's Plan (staggered reveal) -----------------------------
-function PlanReveal({ plan, onStart, busy }: { plan: Plan; onStart: () => void; busy: boolean }) {
-  const blocks = ['head', 'outcome', 'phases', 'constraints', 'cta'];
+// ---- 03 · Novi's Plan (staggered reveal, editable) -------------------
+function PlanReveal({ plan, onStart, onChange, busy }: { plan: Plan; onStart: () => void; onChange: (p: Plan) => void; busy: boolean }) {
+  const [editing, setEditing] = useState(false);
+  if (editing) return <PlanEditor plan={plan} onChange={onChange} onDone={() => setEditing(false)} />;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <div className="rise" style={{ animationDelay: '0ms' }}>
@@ -255,7 +256,68 @@ function PlanReveal({ plan, onStart, busy }: { plan: Plan; onStart: () => void; 
 
       <div className="rise" style={{ animationDelay: '240ms', marginTop: 'auto', paddingTop: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <button className="btn btn-primary" onClick={onStart} disabled={busy}>{busy ? 'Starting…' : 'Start mission'}</button>
-        <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--muted)', cursor: 'pointer' }} onClick={onStart}>Adjust the plan first</div>
+        <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--muted)', cursor: 'pointer' }} onClick={() => setEditing(true)}>Adjust the plan first</div>
+      </div>
+    </div>
+  );
+}
+
+// Editable draft of the plan — rename the title, rewrite the outcome and
+// constraints, edit/add/remove phases, then keep the changes.
+function PlanEditor({ plan, onChange, onDone }: { plan: Plan; onChange: (p: Plan) => void; onDone: () => void }) {
+  const [d, setD] = useState<Plan>(plan);
+  const set = (patch: Partial<Plan>) => setD((p) => ({ ...p, ...patch }));
+  const setPhase = (i: number, patch: Partial<Plan['phases'][number]>) =>
+    setD((p) => ({ ...p, phases: p.phases.map((ph, j) => (j === i ? { ...ph, ...patch } : ph)) }));
+  const removePhase = (i: number) => setD((p) => ({ ...p, phases: p.phases.filter((_, j) => j !== i) }));
+  const addPhase = () => setD((p) => ({ ...p, phases: [...p.phases, { name: 'New phase', status: 'not_started', note: '' }] }));
+  const save = () => { onChange({ ...d, title: d.title.trim() || plan.title }); onDone(); };
+
+  const inputStyle = { width: '100%', border: '1px solid var(--line-strong)', borderRadius: 10, padding: '9px 11px', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, fontFamily: 'var(--font-ui)' } as const;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <div className="eyebrow accent">ADJUST THE PLAN</div>
+
+      <div className="sect">
+        <div className="mono">TITLE</div>
+        <input value={d.title} onChange={(e) => set({ title: e.target.value })} style={{ ...inputStyle, marginTop: 8, fontSize: 18, fontWeight: 600 }} />
+      </div>
+
+      <div className="sect">
+        <div className="mono">OUTCOME</div>
+        <textarea value={d.outcome} onChange={(e) => set({ outcome: e.target.value })} rows={2} style={{ ...inputStyle, marginTop: 8, resize: 'vertical', lineHeight: 1.45 }} />
+      </div>
+
+      <div className="sect">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="mono">PHASES</div>
+          <span className="link" style={{ fontSize: 13 }} onClick={addPhase}>+ Add phase</span>
+        </div>
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {d.phases.map((ph, i) => (
+            <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--muted-2)', paddingTop: 11, width: 20 }}>{String(i + 1).padStart(2, '0')}</div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <input value={ph.name} onChange={(e) => setPhase(i, { name: e.target.value })} style={{ ...inputStyle, fontWeight: 500 }} />
+                <input value={ph.note} onChange={(e) => setPhase(i, { note: e.target.value })} placeholder="Why it matters…" style={{ ...inputStyle, fontSize: 14, color: 'var(--muted)' }} />
+              </div>
+              {d.phases.length > 1 && (
+                <button style={{ paddingTop: 10, color: 'var(--muted-2)', fontSize: 18, lineHeight: 1 }} onClick={() => removePhase(i)} aria-label="Remove phase">×</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="sect">
+        <div className="mono">CONSTRAINTS</div>
+        <input value={d.constraints} onChange={(e) => set({ constraints: e.target.value })} style={{ ...inputStyle, marginTop: 8 }} />
+      </div>
+
+      <div style={{ marginTop: 'auto', paddingTop: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button className="btn btn-primary" onClick={save}>Keep changes</button>
+        <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--muted)', cursor: 'pointer' }} onClick={onDone}>Discard</div>
       </div>
     </div>
   );
