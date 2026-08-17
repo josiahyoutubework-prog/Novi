@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import InstallButton from '../components/InstallButton';
 
 export default function Settings() {
   const nav = useNavigate();
@@ -64,6 +65,8 @@ export default function Settings() {
           <div className="link" style={{ marginTop: 11, fontSize: 15 }} onClick={reconnect}>Reconnect calendar</div>
         </div>
       )}
+
+      <div style={{ marginTop: 26 }}><InstallButton /></div>
 
       <div style={{ marginTop: 26, fontSize: 15, color: 'var(--muted)', cursor: 'pointer' }} onClick={async () => { await logout(); nav('/welcome', { replace: true }); }}>Log out</div>
     </div>

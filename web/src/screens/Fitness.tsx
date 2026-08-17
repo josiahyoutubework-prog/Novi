@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import InstallButton from '../components/InstallButton';
 import './screens.css';
 
 const PRESETS = [10, 20, 30, 50];
@@ -75,8 +76,9 @@ export default function Fitness() {
 
       <button className="btn btn-primary" style={{ marginTop: 24 }} onClick={() => triggerAlarm('now')}>Do the challenge now</button>
       <div style={{ marginTop: 12, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5, textAlign: 'center' }}>
-        The alarm rings while Novi is open. Add Novi to your home screen so it's ready each morning.
+        The alarm rings while Novi is open. Install Novi to your home screen so it's ready each morning.
       </div>
+      <InstallButton />
 
       {/* Recent */}
       {fitness.log.length > 0 && (

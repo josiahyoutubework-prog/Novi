@@ -47,6 +47,16 @@ Open http://localhost:5173.
 
 Under the Claude Code harness this is the **`novi`** launch config (`npm run dev:all`).
 
+## Install as an app (PWA)
+
+Novi is an installable Progressive Web App — a web manifest, app icons (generated
+by `web/gen-icons.mjs`, no image deps), Apple home-screen meta tags, and a service
+worker (`web/public/sw.js`) that caches the app shell for offline use. In a supported
+browser you'll see an **Install Novi** button (Settings and Fitness); on iPhone/iPad use
+**Share → Add to Home Screen**. Installed, Novi launches full-screen like a native app —
+handy for leaving the pushup alarm ready overnight. (The service worker registers in
+production builds only, to keep dev HMR clean.)
+
 ## Tests
 
 ```bash
